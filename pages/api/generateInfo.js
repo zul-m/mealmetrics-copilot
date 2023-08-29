@@ -1,6 +1,7 @@
 // create a controller
 
 const { Configuration, OpenAIApi } = require('openai');
+const { recipePrompt } = require("../../data/recipe.json");
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,6 +10,8 @@ const config = new Configuration({
 const openai = new OpenAIApi(config);
 
 const generateInfo = async (req, res) => {
+    const { recipe } = req.body;
+    
     try {
         const response = await openai.createCompletion({
             engine: 'davinci',
