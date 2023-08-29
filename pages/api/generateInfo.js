@@ -1,6 +1,7 @@
 // create a controller
 
-const { Configuration, OpenAIApi } = require('openai');
+const { Configuration, OpenAIApi } = require("openai");
+const { recipePrompt } = require("../../data/recipe.json");
 
 const config = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,23 +10,33 @@ const config = new Configuration({
 const openai = new OpenAIApi(config);
 
 const generateInfo = async (req, res) => {
-    try {
-        const response = await openai.createCompletion({
-            engine: 'davinci',
-            prompt: req.body.prompt,
-            maxTokens: 64,
-            temperature: 0.9,
-            topP: 1,
-            presencePenalty: 0,
-            frequencyPenalty: 0,
-            bestOf: 1,
-            n: 1,
-            stream: false,
-            stop: ['\n'],
-        });
+    const { recipe } = req.body;
 
-        res.status(200).json(response);
+    try {
+        const completion = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: `${recipePrompt}${recipe}` }],
+            max_tokens: 200,
+            temperature: 0,
+            n: 1,
+        });
+        const response = completion.data.choices[0].message.content;
+
+        return res.status(200).json({
+            success: true,
+            data: response,
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.log(error);
+        if (error.response.status === 401) {
+            return res.status(401).json({
+                error: "Please provide a valid API key.",
+            });
+        }
+        return res.status(500).json({
+            error: "An error occured while generating recipe information. Please try again later.",
+        });
     }
-}
+};
+
+module.exports = { generateInfo };
