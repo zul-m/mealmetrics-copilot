@@ -16,7 +16,7 @@ const generateInfo = async (req, res) => {
         const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: `${recipePrompt}${recipe}` }],
-            maxTokens: 200,
+            max_tokens: 200,
             temperature: 0,
             n: 1,
         });
@@ -27,6 +27,16 @@ const generateInfo = async (req, res) => {
             data: response,
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.log(error);
+        if (error.response.status === 401) {
+            return res.status(401).json({
+                error: "Please provide a valid API key.",
+            });
+        }
+        return res.status(500).json({
+            error: "An error occured while generating recipe information. Please try again later.",
+        });
     }
-}
+};
+
+module.exports = { generateInfo };
